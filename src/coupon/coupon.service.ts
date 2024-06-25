@@ -96,16 +96,17 @@ export class CouponService {
       email: couponAppliedDto.email,
       couponId: couponAppliedDto.couponId,
     });
+    console.log('userOrdersCount: ', userOrdersCount);
     switch (coupon.code) {
       case 'FIRST50':
         if (userOrdersCount >= 1) {
-          throw new BadRequestException('You can use only one time.');
+          throw new BadRequestException('You can use only one time');
         }
         return true;
 
       case 'PATRON50':
         if (userOrdersCount < 4) {
-          throw new BadRequestException('You have already redeemed the code.');
+          throw new BadRequestException('You can use after making more than 4 orders');
         }
         return true;
 
