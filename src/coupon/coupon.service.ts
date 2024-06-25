@@ -81,7 +81,6 @@ export class CouponService {
         discountedPrice,
         isCoupon_applied,
         amount_payable,
-        original_price: productEntry.price,
       };
     } catch (error) {
       throw AuthExceptions.customException(error.message, statusBadRequest);
@@ -94,19 +93,27 @@ export class CouponService {
   ): Promise<boolean> {
     const userOrdersCount = await this.orderModel.countDocuments({
       email: couponAppliedDto.email,
+    });
+    const couponUsageCount = await this.orderModel.countDocuments({
+      email: couponAppliedDto.email,
       couponId: couponAppliedDto.couponId,
     });
     console.log('userOrdersCount: ', userOrdersCount);
     switch (coupon.code) {
       case 'FIRST50':
         if (userOrdersCount >= 1) {
-          throw new BadRequestException('You can use only one time');
+          throw new BadRequestException('You can use only first time');
         }
         return true;
 
       case 'PATRON50':
         if (userOrdersCount < 4) {
-          throw new BadRequestException('You can use after making more than 4 orders');
+          throw new BadRequestException(
+            'You can use after making more than 4 orders',
+          );
+        }
+        if (couponUsageCount >= 1) {
+          throw new BadRequestException('This coupon has already been used');
         }
         return true;
 
@@ -115,6 +122,7 @@ export class CouponService {
           email: couponAppliedDto.email,
           productEntryId: couponAppliedDto.productEntryId,
         });
+        console.log('repeatOrder: ', repeatOrder);
         if (!repeatOrder) {
           throw new BadRequestException('You are not eligible for this offer');
         }
